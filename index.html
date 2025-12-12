@@ -2,8 +2,8 @@
 <html lang="fr">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Link Juice — Visual Graph (Tailwind + Tags custom)</title>
+  <title>Simulateur de Link Juice en ligne – Optimiser le maillage interne SEO</title>
+  <meta name="description" content="Simulez la circulation du link juice, visualisez la puissance des liens internes et structurez votre maillage SEO grâce à un outil interactif en ligne.">
 
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
@@ -13,21 +13,29 @@
 
 <body class="h-screen overflow-hidden bg-slate-950 text-slate-100">
   <!-- Header -->
-  <header class="shrink-0 border-b border-white/10 px-4 py-3 flex items-center justify-between">
-    <div class="font-semibold">Simulateur “Link Juice” — Graphe interactif + Tags personnalisés + Suppression (tags/liens)</div>
-    <div class="flex gap-2">
-      <button id="exportState"
-        class="rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm hover:bg-white/10">
-        💾 Sauvegarder
-      </button>
+  <!-- <header class="shrink-0 border-b border-white/10 px-4 py-3 flex items-center justify-between gap-2"> -->
+    <header class="shrink-0 border-b border-white/10 px-4 py-3 grid grid-cols-5 items-center gap-4">
+        <h1 class="col-span-2">Simulateur de Link Juice en ligne : visualiser et optimiser votre maillage interne</h1>
+        <div class="col-start-3 flex items-center justify-center gap-3">
+         <button id="exportState"
+            class="inline-flex items-center justify-center gap-2 h-9 rounded-xl border border-white/15 bg-white/5 px-4 text-sm hover:bg-white/10 transition">
+            💾 <span>Sauvegarder</span>
+          </button>
 
-      <label class="rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm hover:bg-white/10 cursor-pointer">
-        📂 Importer
-        <input id="importState" type="file" accept=".json" class="hidden">
-      </label>
-    </div>
-  </header>
-
+          <label
+            class="inline-flex items-center justify-center gap-2 h-9 rounded-xl border border-white/15 bg-white/5 px-4 text-sm hover:bg-white/10 transition cursor-pointer">
+            📂 <span>Importer</span>
+            <input id="importState" type="file" accept=".json" class="hidden">
+          </label>
+        </div>
+        <div class="col-span-2 col-start-4 flex items-center justify-end gap-3">
+          <p class="text-xs max-w-[220px] text-slate-300">
+            🇫🇷 Soutenez-moi 🙂 Vous pouvez faire un petit don via Ko-fi.
+          </p>
+          <a href="https://ko-fi.com/dimitribasseguy" class="inline-flex items-center px-2 py-1 rounded-lg border border-white/15  hover:bg-white/15 font-semibold cursor-pointer transition ease-in-out ring-1 ring-cyan-400/40 hover:ring-cyan-300/60 text-xs"><img src="/assets/imgs/kofi.webp" class="max-w-8 mr-2"> Je fais un don</a>
+        </div>
+    </header>
+  
   <!-- Main layout (no page scroll) -->
   <main class="h-[calc(100vh-52px)] overflow-hidden p-3">
     <div class="grid h-full grid-cols-[520px_1fr] gap-3">
@@ -63,7 +71,7 @@ Pourquoi l’intérim est un choix stratégique pour les entreprises"></textarea
             <span class="text-xs text-slate-400">▼</span>
           </summary>
 
-          <div class="mt-3 grid grid-cols-2 gap-2">
+          <div class="mt-3 grid grid-cols-3 gap-2 items-end">
             <div>
               <label class="text-xs text-slate-300">Nom du tag</label>
               <input id="newTagName" class="mt-1 w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm outline-none placeholder:text-slate-400/70 focus:border-white/25"
@@ -74,13 +82,14 @@ Pourquoi l’intérim est un choix stratégique pour les entreprises"></textarea
               <input id="newTagColor" type="color" value="#7dffb2"
                 class="mt-1 h-[42px] w-full rounded-xl border border-white/15 bg-white/5 px-2 py-2" />
             </div>
+            <div class="mt-2">
+              <button id="addTagBtn" class="rounded-xl border border-blue-400/40 bg-blue-400/15 px-3 py-2 text-sm hover:bg-blue-400/20">
+                Ajouter le tag
+              </button>
+            </div>
           </div>
 
-          <div class="mt-2">
-            <button id="addTagBtn" class="rounded-xl border border-blue-400/40 bg-blue-400/15 px-3 py-2 text-sm hover:bg-blue-400/20">
-              Ajouter le tag
-            </button>
-          </div>
+          
 
           <div class="mt-3 max-h-40 overflow-auto rounded-xl border border-white/10 bg-black/10">
             <table class="w-full border-collapse text-xs">

@@ -69,35 +69,54 @@ function renderAll() {
 
 function loadExample() {
   state.titles = [
-    "Comment décrocher une mission intérim rapidement",
-    "Pourquoi l’intérim est un choix stratégique pour les entreprises",
-    "Recrutement intérim : gérer les pics saisonniers efficacement",
-    "RSE et intérim : un levier pour l’insertion et l’impact social",
-    "Travail de nuit et intérim, c’est compatible ?",
-    "Travailler le week-end en intérim ?",
-    "Travailleurs reconnus handicapés : emploi, intérim et insertion",
-    "Les avantages d’une agence d’emploi pour votre entreprise"
+    "Les Trois Lois de la Robotique : fondements et dilemmes",
+    "Psychohistoire : science et prédiction dans Fondation",
+    "L’Empire Galactique : essor, chute et renaissance",
+    "Les Robots positroniques : évolution et société",
+    "La Terre face à la crise radioactive",
+    "Daneel Olivaw : l’androïde derrière l’Histoire",
+    "La psychohistoire peut-elle échouer ?",
+    "La Première Fondation : science contre religion"
   ];
 
+  // On vide les tags avant d'ajouter ceux de l'exemple
+  state.tags = [];
   const needed = [
-    { name: "B2C", color: "#7dffb2" },
-    { name: "B2B", color: "#ffcc66" },
-    { name: "Autre", color: "#cfd7ff" }
+    { name: "Robotique", color: "#7dffb2" },
+    { name: "Psychohistoire", color: "#ffcc66" },
+    { name: "Empire", color: "#cfd7ff" }
   ];
   for (const t of needed) {
-    if (!state.tags.some(x => x.name === t.name)) state.tags.push(t);
+    state.tags.push(t);
   }
-  state.tags = uniqByName(state.tags);
 
-  state.articleTags = ["B2C","B2B","B2B","B2B","B2C","B2C","B2C","B2B"];
+  state.articleTags = [
+    "Robotique",
+    "Psychohistoire",
+    "Empire",
+    "Robotique",
+    "Empire",
+    "Robotique",
+    "Psychohistoire",
+    "Empire"
+  ];
   state.links = [
-    { from: 4, to: 2, type: "pillar", weight: 1 },
-    { from: 5, to: 2, type: "pillar", weight: 1 },
-    { from: 6, to: 3, type: "pillar", weight: 1 },
-    { from: 7, to: 1, type: "pillar", weight: 1 },
-    { from: 2, to: 1, type: "pillar", weight: 1 },
-    { from: 0, to: 1, type: "pillar", weight: 1 },
-    { from: 0, to: 7, type: "classic", weight: 1 }
+    // Liens existants
+    { from: 0, to: 3, type: "pillar", weight: 1 }, // Robotique -> Robotique
+    { from: 1, to: 6, type: "pillar", weight: 1 }, // Psychohistoire -> Psychohistoire
+    { from: 2, to: 4, type: "pillar", weight: 1 }, // Empire -> Empire
+    { from: 5, to: 0, type: "classic", weight: 1 }, // Robotique -> Robotique
+    { from: 6, to: 1, type: "classic", weight: 1 }, // Psychohistoire -> Psychohistoire
+    { from: 7, to: 2, type: "pillar", weight: 1 }, // Empire -> Empire
+    { from: 3, to: 5, type: "classic", weight: 1 }, // Robotique -> Robotique
+    // Liens entre tags différents
+    { from: 0, to: 1, type: "classic", weight: 1 }, // Robotique -> Psychohistoire
+    { from: 1, to: 2, type: "classic", weight: 1 }, // Psychohistoire -> Empire
+    { from: 2, to: 0, type: "classic", weight: 1 }, // Empire -> Robotique
+    { from: 4, to: 6, type: "pillar", weight: 1 }, // Empire -> Psychohistoire
+    { from: 5, to: 7, type: "classic", weight: 1 }, // Robotique -> Empire
+    { from: 6, to: 3, type: "classic", weight: 1 }, // Psychohistoire -> Robotique
+    { from: 7, to: 4, type: "pillar", weight: 1 }  // Empire -> Empire
   ];
 
   saveAndRender();
@@ -109,7 +128,27 @@ function wire() {
   $("addLink").addEventListener("click", () => addLinkFromInputs(state, saveAndRender));
 
   $("clearLinks").addEventListener("click", () => { state.links = []; saveAndRender(); });
-  $("resetAll").addEventListener("click", () => { state.titles = []; state.articleTags = []; state.links = []; setSelectedArticles(new Set()); saveAndRender(); });
+  $("resetAll").addEventListener("click", () => {
+    if (!confirm("Tout réinitialiser ? Articles, liens et tags seront supprimés.")) return;
+
+    // reset contenu
+    state.titles = [];
+    state.articleTags = [];
+    state.links = [];
+
+    // reset tags (état par défaut)
+    state.tags = [
+      { name: "Tag1", color: "#7dffb2" },
+      { name: "Tag2", color: "#ffcc66" },
+      { name: "Autre", color: "#cfd7ff" }
+    ];
+
+    // reset sélection
+    selectedArticles.clear();
+
+    saveToLocalStorage(state);
+    renderAll();
+  });
   $("loadExample").addEventListener("click", loadExample);
 
   $("compute").addEventListener("click", renderAll);
