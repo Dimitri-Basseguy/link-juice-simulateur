@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Link Juice — Visual Graph (Tailwind + Tags custom)</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+
+  <link rel="stylesheet" href="/assets/styles.css" />
+</head>
+
+<body class="h-screen overflow-hidden bg-slate-950 text-slate-100">
+  <!-- Header -->
+  <header class="shrink-0 border-b border-white/10 px-4 py-3 flex items-center justify-between">
+    <div class="font-semibold">Simulateur “Link Juice” — Graphe interactif + Tags personnalisés + Suppression (tags/liens)</div>
+    <div class="flex gap-2">
+      <button id="exportState"
+        class="rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm hover:bg-white/10">
+        💾 Sauvegarder
+      </button>
+
+      <label class="rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm hover:bg-white/10 cursor-pointer">
+        📂 Importer
+        <input id="importState" type="file" accept=".json" class="hidden">
+      </label>
+    </div>
+  </header>
+
+  <!-- Main layout (no page scroll) -->
+  <main class="h-[calc(100vh-52px)] overflow-hidden p-3">
+    <div class="grid h-full grid-cols-[520px_1fr] gap-3">
+      <!-- LEFT PANEL -->
+      <section id="leftPanel" class="h-full overflow-auto rounded-2xl border border-white/10 bg-slate-900/40 p-3 shadow-xl">
+        <p class="text-xs leading-snug text-slate-300">
+          <span class="font-mono">1)</span> Titres → <span class="font-mono">2)</span> Tags → <span class="font-mono">3)</span> Assigner tags → <span class="font-mono">4)</span> Liens.
+          <br><span class="font-mono">Note</span> : sauvegarde locale (localStorage).
+        </p>
+
+        <div class="my-3 h-px bg-white/10"></div>
+
+        <!-- Titles -->
+        <label class="text-xs text-slate-300">Articles (1 titre par ligne)</label>
+        <textarea id="titles" class="mt-2 w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm outline-none placeholder:text-slate-400/70 focus:border-white/25"
+          rows="4"
+          placeholder="Ex :
+Comment décrocher une mission intérim rapidement
+Pourquoi l’intérim est un choix stratégique pour les entreprises"></textarea>
+
+        <div class="mt-2 flex flex-wrap gap-2">
+          <button id="addTitles" class="rounded-xl border border-blue-400/40 bg-blue-400/15 px-3 py-2 text-sm hover:bg-blue-400/20">Ajouter / fusionner</button>
+          <button id="loadExample" class="rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm hover:bg-white/10">Exemple</button>
+          <button id="resetAll" class="rounded-xl border border-red-400/40 bg-red-400/10 px-3 py-2 text-sm hover:bg-red-400/15">Reset</button>
+        </div>
+
+        <div class="my-4 h-px bg-white/10"></div>
+
+        <!-- Tags -->
+        <details open class="rounded-xl border border-white/10 bg-white/[0.03] p-3">
+          <summary class="cursor-pointer select-none text-sm font-semibold text-slate-100 flex items-center justify-between">
+            <span>Tags (création libre) <span class="font-normal text-xs text-slate-400">— ajouter / supprimer</span></span>
+            <span class="text-xs text-slate-400">▼</span>
+          </summary>
+
+          <div class="mt-3 grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-xs text-slate-300">Nom du tag</label>
+              <input id="newTagName" class="mt-1 w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm outline-none placeholder:text-slate-400/70 focus:border-white/25"
+                placeholder="Ex : B2C, B2B, Cluster Transport…" />
+            </div>
+            <div>
+              <label class="text-xs text-slate-300">Couleur</label>
+              <input id="newTagColor" type="color" value="#7dffb2"
+                class="mt-1 h-[42px] w-full rounded-xl border border-white/15 bg-white/5 px-2 py-2" />
+            </div>
+          </div>
+
+          <div class="mt-2">
+            <button id="addTagBtn" class="rounded-xl border border-blue-400/40 bg-blue-400/15 px-3 py-2 text-sm hover:bg-blue-400/20">
+              Ajouter le tag
+            </button>
+          </div>
+
+          <div class="mt-3 max-h-40 overflow-auto rounded-xl border border-white/10 bg-black/10">
+            <table class="w-full border-collapse text-xs">
+              <thead class="bg-slate-900/95 backdrop-blur-md">
+                <tr class="text-slate-300">
+                  <th class="px-3 py-2 text-left font-semibold">Tag</th>
+                  <th class="px-3 py-2 text-left font-semibold">Couleur</th>
+                  <th class="px-3 py-2 text-left font-semibold"></th>
+                </tr>
+              </thead>
+              <tbody id="tagCatalogRows"></tbody>
+            </table>
+          </div>
+        </details>
+
+        <div class="my-3"></div>
+
+        <!-- Article tags -->
+        <details open class="rounded-xl border border-white/10 bg-white/[0.03] p-3">
+          <summary class="cursor-pointer select-none text-sm font-semibold text-slate-100 flex items-center justify-between">
+            <span>Tags par article <span class="font-normal text-xs text-slate-400">— assignation</span></span>
+            <span class="text-xs text-slate-400">▼</span>
+          </summary>
+
+          <div class="mt-3 flex flex-wrap items-center gap-2">
+            <label class="inline-flex items-center gap-2 text-xs text-slate-300">
+              <input id="selAllArticles" type="checkbox" class="h-4 w-4 accent-blue-400">
+              Tout sélectionner
+            </label>
+
+            <select id="bulkTagSelect"
+              class="ml-auto rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm outline-none focus:border-white/25"></select>
+
+            <button id="applyBulkTag"
+              class="rounded-xl border border-blue-400/40 bg-blue-400/15 px-3 py-2 text-sm hover:bg-blue-400/20">
+              Appliquer au(x) sélectionné(s)
+            </button>
+
+            <button id="clearSelection"
+              class="rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm hover:bg-white/10">
+              Désélectionner
+            </button>
+          </div>
+
+          <div class="mt-3 max-h-56 overflow-auto rounded-xl border border-white/10 bg-black/10">
+            <table class="w-full border-collapse text-xs">
+              <thead class="bg-slate-900/80 backdrop-blur">
+                <tr class="text-slate-300">
+                  <th class="px-3 py-2 text-left font-semibold w-10"></th>
+                  <th class="px-3 py-2 text-left font-semibold">Article</th>
+                  <th class="px-3 py-2 text-left font-semibold">Tag</th>
+                </tr>
+              </thead>
+              <tbody id="articleTagRows"></tbody>
+            </table>
+          </div>
+        </details>
+
+        <div class="my-3"></div>
+
+        <!-- Add link -->
+        <details open class="rounded-xl border border-white/10 bg-white/[0.03] p-3">
+          <summary class="cursor-pointer select-none text-sm font-semibold text-slate-100 flex items-center justify-between">
+            <span>Ajouter un lien <span class="font-normal text-xs text-slate-400">— classique / pilier</span></span>
+            <span class="text-xs text-slate-400">▼</span>
+          </summary>
+
+          <div class="mt-3 grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-xs text-slate-300">De (source)</label>
+              <select id="from" class="mt-1 w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm outline-none focus:border-white/25"></select>
+            </div>
+            <div>
+              <label class="text-xs text-slate-300">Vers (cible)</label>
+              <select id="to" class="mt-1 w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm outline-none focus:border-white/25"></select>
+            </div>
+          </div>
+
+          <div class="mt-2 grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-xs text-slate-300">Type</label>
+              <select id="type" class="mt-1 w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm outline-none focus:border-white/25">
+                <option value="classic">Classique</option>
+                <option value="pillar">Pilier</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-xs text-slate-300">Poids</label>
+              <input id="weight" type="number" min="0.1" step="0.1" value="1.0"
+                class="mt-1 w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm outline-none focus:border-white/25" />
+            </div>
+          </div>
+
+          <div class="mt-3 flex flex-wrap gap-2">
+            <button id="addLink" class="rounded-xl border border-blue-400/40 bg-blue-400/15 px-3 py-2 text-sm hover:bg-blue-400/20">Ajouter le lien</button>
+            <button id="clearLinks" class="rounded-xl border border-red-400/40 bg-red-400/10 px-3 py-2 text-sm hover:bg-red-400/15">Supprimer tous les liens</button>
+          </div>
+        </details>
+
+        <div class="my-3"></div>
+
+        <!-- Existing links -->
+        <details open class="rounded-xl border border-white/10 bg-white/[0.03] p-3">
+          <summary class="cursor-pointer select-none text-sm font-semibold text-slate-100 flex items-center justify-between">
+            <span>Liens existants <span class="font-normal text-xs text-slate-400">— suppression possible</span></span>
+            <span class="text-xs text-slate-400">▼</span>
+          </summary>
+
+          <div class="mt-3 max-h-56 overflow-auto rounded-xl border border-white/10 bg-black/10">
+            <table class="w-full border-collapse text-xs">
+              <thead class="bg-slate-900/80 backdrop-blur">
+                <tr class="text-slate-300">
+                  <th class="px-3 py-2 text-left font-semibold">Source</th>
+                  <th class="px-3 py-2 text-left font-semibold">Cible</th>
+                  <th class="px-3 py-2 text-left font-semibold">Type</th>
+                  <th class="px-3 py-2 text-left font-semibold">Poids</th>
+                  <th class="px-3 py-2 text-left font-semibold"></th>
+                </tr>
+              </thead>
+              <tbody id="linkRows"></tbody>
+            </table>
+          </div>
+        </details>
+
+        <div class="my-3"></div>
+
+        <!-- Params -->
+        <details class="rounded-xl border border-white/10 bg-white/[0.03] p-3">
+          <summary class="cursor-pointer select-none text-sm font-semibold text-slate-100 flex items-center justify-between">
+            <span>Paramètres du calcul <span class="font-normal text-xs text-slate-400">— damping / boosts</span></span>
+            <span class="text-xs text-slate-400">▼</span>
+          </summary>
+
+          <div class="mt-3 grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-xs text-slate-300">Damping</label>
+              <input id="damping" type="number" min="0.1" max="0.99" step="0.01" value="0.85"
+                class="mt-1 w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm outline-none focus:border-white/25" />
+            </div>
+            <div>
+              <label class="text-xs text-slate-300">Itérations</label>
+              <input id="iters" type="number" min="5" max="500" step="1" value="40"
+                class="mt-1 w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm outline-none focus:border-white/25" />
+            </div>
+          </div>
+
+          <div class="mt-2 grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-xs text-slate-300">Boost pilier</label>
+              <input id="pillarBoost" type="number" min="1" step="0.1" value="1.6"
+                class="mt-1 w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm outline-none focus:border-white/25" />
+            </div>
+            <div>
+              <label class="text-xs text-slate-300">Boost classique</label>
+              <input id="classicBoost" type="number" min="1" step="0.1" value="1.0"
+                class="mt-1 w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm outline-none focus:border-white/25" />
+            </div>
+          </div>
+
+          <div class="mt-3">
+            <button id="compute" class="rounded-xl border border-blue-400/40 bg-blue-400/15 px-3 py-2 text-sm hover:bg-blue-400/20">
+              Calculer + Afficher
+            </button>
+          </div>
+        </details>
+
+        <div class="mt-2">
+          <button id="compute2" class="w-full rounded-xl border border-blue-400/40 bg-blue-400/15 px-3 py-2 text-sm hover:bg-blue-400/20">
+            Calculer + Afficher
+          </button>
+        </div>
+      </section>
+
+      <!-- RIGHT PANEL -->
+      <section id="rightPanel" class="flex h-full min-h-0 flex-col gap-3 overflow-hidden rounded-2xl border border-white/10 bg-slate-900/40 p-3 shadow-xl">
+        <div class="flex items-end justify-between gap-3">
+          <div>
+            <div class="font-semibold">Scores (réception de “juice”)</div>
+            <div class="text-xs text-slate-300">Trié du plus fort au plus faible. Couleur des nœuds = couleur du tag.</div>
+          </div>
+          <div id="legend" class="flex flex-wrap items-center gap-2 text-xs text-slate-300"></div>
+        </div>
+
+        <div class="max-h-60 overflow-auto rounded-xl border border-white/10 bg-black/10">
+          <table class="w-full border-collapse text-xs">
+            <thead class="bg-slate-900/80 backdrop-blur">
+              <tr class="text-slate-300">
+                <th class="px-3 py-2 text-left font-semibold">Rang</th>
+                <th class="px-3 py-2 text-left font-semibold">Article</th>
+                <th class="px-3 py-2 text-left font-semibold">Tag</th>
+                <th class="px-3 py-2 text-left font-semibold">Score</th>
+                <th class="px-3 py-2 text-left font-semibold w-10"></th>
+              </tr>
+            </thead>
+            <tbody id="scoreRows"></tbody>
+          </table>
+        </div>
+
+        <div id="viz" class="relative flex-1 min-h-0 overflow-hidden rounded-2xl border border-white/10 bg-slate-900/20">
+          <div id="tip" class="pointer-events-none absolute left-0 top-0 z-10 hidden max-w-[520px] -translate-x-1/2 -translate-y-[120%] rounded-xl border border-white/10 bg-slate-950/90 px-3 py-2 text-xs"></div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script type="module" src="/assets/js/app.js"></script>
+</body>
+</html>
