@@ -194,8 +194,8 @@ export function renderGraph(state, scores) {
     });
    // Boucles : jaune
     loopLinks.forEach(l => {
-      l.style.filter = "drop-shadow(0 0 7px #FFD600) brightness(1.2)";
-      l.style.stroke = "#FFD600";
+      l.style.filter = "drop-shadow(0 0 6px #fff) brightness(1.2)";
+      l.style.stroke = "#fff";
     });
     svgEl.querySelectorAll(`.node-${idx}`).forEach(n => n.style.filter = "drop-shadow(0 0 8px #fff) brightness(1.7)");
   };
