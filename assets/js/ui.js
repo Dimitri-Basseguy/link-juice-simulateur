@@ -145,9 +145,8 @@ export function renderScoreTable(state, scores, onDeleteArticle) {
   $("scoreRows").innerHTML = rows.map((r, idx) => {
     const tagObj = state.tags.find(t => t.name === r.tag);
     const color = tagObj ? tagObj.color : "#cfd7ff";
-
     return `
-      <tr class="border-b border-white/10 hover:bg-white/5 transition">
+      <tr class="border-b border-white/10 hover:bg-white/5 transition score-row" data-article-index="${r.i}">
         <td class="px-3 py-2">${idx + 1}</td>
         <td class="px-3 py-2">${escapeHtml(r.t)}</td>
         <td class="px-3 py-2">
@@ -170,6 +169,17 @@ export function renderScoreTable(state, scores, onDeleteArticle) {
       const idx = Number(btn.getAttribute("data-del-article"));
       if (!Number.isInteger(idx)) return;
       onDeleteArticle(idx);
+    });
+  });
+
+  // Ajout des listeners pour la mise en évidence graphique
+  document.querySelectorAll("tr.score-row").forEach(row => {
+    const idx = Number(row.getAttribute("data-article-index"));
+    row.addEventListener("mouseenter", () => {
+      if (window.highlightGraphLinks) window.highlightGraphLinks(idx);
+    });
+    row.addEventListener("mouseleave", () => {
+      if (window.highlightGraphLinks) window.highlightGraphLinks(null);
     });
   });
 }

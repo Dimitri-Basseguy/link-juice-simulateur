@@ -84,6 +84,7 @@ export function renderGraph(state, scores) {
     .selectAll("line")
     .data(links)
     .join("line")
+    .attr("class", d => `graph-link link-from-${d.source} link-to-${d.target}`)
     .attr("stroke", d => d.type === "pillar" ? "rgba(255,204,102,.85)" : "rgba(122,162,255,.55)")
     .attr("stroke-width", d => (d.type === "pillar" ? 1.25 : 1.0) * lw(d.weight));
 
@@ -100,6 +101,7 @@ export function renderGraph(state, scores) {
     .selectAll("circle")
     .data(nodes)
     .join("circle")
+    .attr("class", d => `graph-node node-${d.id}`)
     .attr("r", d => rScale(d.score))
     .attr("fill", d => hexToRGBA(d.tagColor, 0.18))
     .attr("stroke", d => hexToRGBA(d.tagColor, 0.90))
@@ -158,4 +160,43 @@ export function renderGraph(state, scores) {
       .attr("cx", d => d.source.x + (d.target.x - d.source.x) * t)
       .attr("cy", d => d.source.y + (d.target.y - d.source.y) * t);
   });
+
+  // Fonction globale pour surligner les liens et nœuds associés à un article
+  window.highlightGraphLinks = function(idx) {
+    const svgEl = document.querySelector("#viz svg");
+    if (!svgEl) return;
+    // Réinitialise tout
+    svgEl.querySelectorAll(".graph-link").forEach(l => {
+      l.style.filter = "none";
+      l.style.stroke = "";
+    });
+    svgEl.querySelectorAll(".graph-node").forEach(n => n.style.filter = "none");
+    if (typeof idx !== "number" || isNaN(idx)) return;
+    // Liens sortants, entrants et boucles
+    const fromLinks = Array.from(svgEl.querySelectorAll(`.link-from-${idx}`));
+    const toLinks = Array.from(svgEl.querySelectorAll(`.link-to-${idx}`));
+    // Boucles : liens qui sont à la fois from et to (A->A)
+    const loopLinks = fromLinks.filter(l => toLinks.includes(l));
+    // Liens sortants purs
+    const outLinks = fromLinks.filter(l => !loopLinks.includes(l));
+    // Liens entrants purs
+    const inLinks = toLinks.filter(l => !loopLinks.includes(l));
+
+    // Sortants : rouge
+    outLinks.forEach(l => {
+      l.style.filter = "drop-shadow(0 0 6px #FF3C3A) brightness(1.2)";
+      l.style.stroke = "#FF3C3A";
+    });
+    // Entrants : vert
+    inLinks.forEach(l => {
+      l.style.filter = "drop-shadow(0 0 6px #06C370) brightness(1.2)";
+      l.style.stroke = "#06C370";
+    });
+   // Boucles : jaune
+    loopLinks.forEach(l => {
+      l.style.filter = "drop-shadow(0 0 7px #FFD600) brightness(1.2)";
+      l.style.stroke = "#FFD600";
+    });
+    svgEl.querySelectorAll(`.node-${idx}`).forEach(n => n.style.filter = "drop-shadow(0 0 8px #fff) brightness(1.7)");
+  };
 }

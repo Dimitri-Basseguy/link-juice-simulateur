@@ -63,8 +63,8 @@ function renderAll() {
   refreshLinksTable(state, saveAndRender);
 
   const scores = computeScores(state, paramsFromUI());
-  renderScoreTable(state, scores, deleteArticle);
   renderGraph(state, scores);
+  renderScoreTable(state, scores, deleteArticle);
 }
 
 function loadExample() {
