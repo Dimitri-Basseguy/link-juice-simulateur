@@ -1,5 +1,6 @@
 import { $, escapeHtml } from "./utils.js";
 import { getTag } from "./ui.js";
+import { getDefaultTagName } from "./state.js";
 
 let svg = null;
 let g = null;
@@ -64,13 +65,17 @@ export function renderGraph(state, scores) {
     return;
   }
 
-  const nodes = state.titles.map((t, i) => ({
-    id: i,
-    title: t,
-    tag: state.articleTags[i] || state.tags[0]?.name || "B2C",
-    tagColor: (getTag(state, state.articleTags[i] || state.tags[0]?.name || "B2C").color),
-    score: (scores[i] || 0)
-  }));
+  const nodes = state.titles.map((t, i) => {
+    const nodeTag = state.articleTags[i] || getDefaultTagName(state);
+    const tagObj = getTag(state, nodeTag);
+    return {
+      id: i,
+      title: t,
+      tag: nodeTag,
+      tagColor: tagObj?.color || "#cfd7ff",
+      score: scores[i] || 0
+    };
+  });
 
   const links = state.links.map(l => ({ source: l.from, target: l.to, type: l.type, weight: l.weight }));
 

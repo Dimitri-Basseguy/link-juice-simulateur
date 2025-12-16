@@ -1,11 +1,21 @@
+export const DEFAULT_TAG_NAME = "TAG1";
+
+export function createDefaultTags() {
+  return [
+    { name: DEFAULT_TAG_NAME, color: "#7dffb2" },
+    { name: "TAG2", color: "#ffcc66" },
+    { name: "Autres", color: "#cfd7ff" }
+  ];
+}
+
+export function getDefaultTagName(state) {
+  return state.tags[0]?.name || DEFAULT_TAG_NAME;
+}
+
 export const state = {
   titles: [],
   articleTags: [],
-  tags: [
-    { name: "B2C", color: "#7dffb2" },
-    { name: "B2B", color: "#ffcc66" },
-    { name: "Autre", color: "#cfd7ff" }
-  ],
+  tags: createDefaultTags(),
   links: []
 };
 

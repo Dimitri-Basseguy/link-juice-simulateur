@@ -1,5 +1,5 @@
 import { $, uniqByName } from "./utils.js";
-import { state, selectedArticles, setSelectedArticles } from "./state.js";
+import { state, selectedArticles, setSelectedArticles, createDefaultTags } from "./state.js";
 import { loadFromLocalStorage, saveToLocalStorage, exportStateToFile, importStateFromFile } from "./storage.js";
 import { computeScores } from "./pagerank.js";
 import {
@@ -137,11 +137,7 @@ function wire() {
     state.links = [];
 
     // reset tags (état par défaut)
-    state.tags = [
-      { name: "Tag1", color: "#7dffb2" },
-      { name: "Tag2", color: "#ffcc66" },
-      { name: "Autre", color: "#cfd7ff" }
-    ];
+    state.tags = createDefaultTags();
 
     // reset sélection
     selectedArticles.clear();

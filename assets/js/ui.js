@@ -1,8 +1,28 @@
 import { $, escapeHtml, sanitizeTitle, uniqByName } from "./utils.js";
-import { selectedArticles, setSelectedArticles } from "./state.js";
+import { selectedArticles, setSelectedArticles, DEFAULT_TAG_NAME, createDefaultTags } from "./state.js";
+
+function formatScoreFR(value) {
+  return Number(value || 0).toLocaleString("fr-FR", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+}
+
+function renderTagLegend(state, totals) {
+  const legend = $("legend");
+  if (!legend) return;
+
+  legend.innerHTML = state.tags.map(t => {
+    const total = totals?.get(t.name);
+    const totalLabel = typeof total === "number" ? ` <span class="text-slate-400 text-[11px]">(${formatScoreFR(total)})</span>` : "";
+    return `
+      <span class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-2 py-1">
+        <span class="h-2 w-2 rounded-full border border-white/20" style="background:${t.color}"></span>
+        <span>${escapeHtml(t.name)}</span>${totalLabel}
+      </span>
+    `;
+  }).join("");
+}
 
 export function ensureArticleTags(state) {
-  const defaultTag = (state.tags[0]?.name) || "B2C";
+  const defaultTag = state.tags[0]?.name || DEFAULT_TAG_NAME;
 
   while (state.articleTags.length < state.titles.length) state.articleTags.push(defaultTag);
   if (state.articleTags.length > state.titles.length) state.articleTags = state.articleTags.slice(0, state.titles.length);
@@ -12,7 +32,8 @@ export function ensureArticleTags(state) {
 }
 
 export function getTag(state, name) {
-  return state.tags.find(t => t.name === name) || state.tags[0];
+  const fallback = state.tags[0] || createDefaultTags()[0];
+  return state.tags.find(t => t.name === name) || fallback;
 }
 
 export function refreshSelects(state) {
@@ -22,12 +43,7 @@ export function refreshSelects(state) {
 }
 
 export function refreshTagCatalog(state, onChange) {
-  $("legend").innerHTML = state.tags.map(t => `
-    <span class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-2 py-1">
-      <span class="h-2 w-2 rounded-full border border-white/20" style="background:${t.color}"></span>
-      <span>${escapeHtml(t.name)}</span>
-    </span>
-  `).join("");
+  renderTagLegend(state);
 
   $("tagCatalogRows").innerHTML = state.tags.map((t, idx) => `
     <tr class="border-b border-white/10">
@@ -66,7 +82,7 @@ export function refreshArticleTagsTable(state, onChange) {
     .join("");
 
   $("articleTagRows").innerHTML = state.titles.map((title, i) => {
-    const tagName = state.articleTags[i] || state.tags[0]?.name || "B2C";
+    const tagName = state.articleTags[i] || state.tags[0]?.name || DEFAULT_TAG_NAME;
     const tag = getTag(state, tagName);
     const checked = selectedArticles.has(i) ? "checked" : "";
 
@@ -139,8 +155,14 @@ export function refreshLinksTable(state, onChange) {
 
 export function renderScoreTable(state, scores, onDeleteArticle) {
   const rows = state.titles
-    .map((t, i) => ({ t, i, tag: state.articleTags[i] || state.tags[0]?.name || "B2C", s: scores[i] || 0 }))
+    .map((t, i) => ({ t, i, tag: state.articleTags[i] || state.tags[0]?.name || DEFAULT_TAG_NAME, s: scores[i] || 0 }))
     .sort((a, b) => b.s - a.s);
+
+  const totals = new Map();
+  for (const r of rows) {
+    totals.set(r.tag, (totals.get(r.tag) || 0) + r.s);
+  }
+  renderTagLegend(state, totals);
 
   $("scoreRows").innerHTML = rows.map((r, idx) => {
     const tagObj = state.tags.find(t => t.name === r.tag);
@@ -187,7 +209,7 @@ export function renderScoreTable(state, scores, onDeleteArticle) {
 export function addTitlesFromTextarea(state, onChange) {
   const lines = $("titles").value.split("\n").map(sanitizeTitle).filter(Boolean);
   const existing = new Set(state.titles);
-  const defaultTag = state.tags[0]?.name || "B2C";
+  const defaultTag = state.tags[0]?.name || DEFAULT_TAG_NAME;
 
   for (const t of lines) {
     if (!existing.has(t)) {
